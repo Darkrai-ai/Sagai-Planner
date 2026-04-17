@@ -132,7 +132,12 @@
                 </div>
                 <div class="form-group">
                     <label data-lang-key="phoneLabel">Phone Number</label>
-                    <input type="tel" id="edit-g-phone">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="tel" id="edit-g-phone" style="flex: 1; width: auto;">
+                        <button type="button" class="btn-secondary flex-center" id="btn-fetch-contact" style="padding: 0 12px; height: 42px;" title="Fetch from Contacts">
+                            <span class="material-symbols-rounded">perm_contact_calendar</span>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

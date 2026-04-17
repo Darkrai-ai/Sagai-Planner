@@ -338,6 +338,33 @@ function initGuests() {
         saveState();
         hideModal('modal-edit-guest');
     });
+
+    const btnFetchContact = document.getElementById('btn-fetch-contact');
+    if (btnFetchContact) {
+        btnFetchContact.addEventListener('click', async () => {
+            try {
+                if ('contacts' in navigator && 'ContactsManager' in window) {
+                    const props = ['name', 'tel'];
+                    const opts = { multiple: false };
+                    const contacts = await navigator.contacts.select(props, opts);
+                    if (contacts.length > 0) {
+                        const contact = contacts[0];
+                        if (contact.tel && contact.tel.length > 0) {
+                            document.getElementById('edit-g-phone').value = contact.tel[0].replace(/\s+/g, '');
+                        }
+                        const nameInput = document.getElementById('edit-g-name');
+                        if (contact.name && contact.name.length > 0 && !nameInput.value.trim()) {
+                            nameInput.value = contact.name[0];
+                        }
+                    }
+                } else {
+                    alert('Contact Picker API is not supported on this browser or device.');
+                }
+            } catch (err) {
+                console.error("Error fetching contact:", err);
+            }
+        });
+    }
 }
 
 // Global functions for guests embedded in HTML
@@ -400,6 +427,7 @@ function renderGuests() {
                 </div>
             </div>
             <div class="item-actions">
+                ${g.phone ? `<a href="tel:${g.phone}" class="btn-icon" style="color: var(--primary); text-decoration: none;" title="Call"><span class="material-symbols-rounded">call</span></a>` : ''}
                 <button class="btn-icon" onclick="openEditGuest('${g.id}')"><span class="material-symbols-rounded">edit</span></button>
                 <button class="btn-icon danger-text" onclick="deleteGuest('${g.id}')"><span class="material-symbols-rounded">delete</span></button>
             </div>
