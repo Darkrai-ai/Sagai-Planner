@@ -121,29 +121,32 @@ function saveLocalSettings() {
 }
 
 function loadSharedData() {
+    loadLegacyFallback(); // Immediately load local data first
+
     if (db) {
         try {
             const docRef = doc(db, "planners", PLANNER_DOC_ID);
             onSnapshot(docRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    state.guests = data.guests || [];
-                    state.expenses = data.expenses || [];
-                    state.categories = data.categories || ['Decorations', 'Catering', 'Location', 'Clothing', 'Miscellaneous'];
-                    renderAll();
+                    let updated = false;
+                    if(data.guests) { state.guests = data.guests; updated = true; }
+                    if(data.expenses) { state.expenses = data.expenses; updated = true; }
+                    if(data.categories) { state.categories = data.categories; updated = true; }
+                    if(updated) {
+                        localStorage.setItem('sagaiState', JSON.stringify(state));
+                        renderAll();
+                    }
                 } else {
+                    // Seed server with local data if document doesn't exist locally
                     saveSharedData();
                 }
             }, (error) => {
-                console.error("Firestore sync error:", error);
-                loadLegacyFallback();
+                console.error("Firestore sync error (likely permission denied). Relying on local storage.", error);
             });
         } catch(e) {
             console.error("Firestore listener error:", e);
-            loadLegacyFallback();
         }
-    } else {
-        loadLegacyFallback();
     }
 }
 
@@ -158,6 +161,8 @@ function loadLegacyFallback() {
     }
 }
 
+let fsErrorAlerted = false;
+
 function saveSharedData() {
     if (db) {
         try {
@@ -166,7 +171,13 @@ function saveSharedData() {
                 guests: state.guests,
                 expenses: state.expenses,
                 categories: state.categories
-            }, { merge: true }).catch(err => console.error("Error saving to Firestore:", err));
+            }, { merge: true }).catch(err => {
+                console.error("Error saving to Firestore:", err);
+                if (!fsErrorAlerted) {
+                    alert("⚠️ Real-time Sync blocked by Firebase Rules!\n\nYour data is saved safely on this device, but won't sync to others until you open your Firebase Console and change the Firestore Rules to allow read and write.");
+                    fsErrorAlerted = true;
+                }
+            });
         } catch (e) {
             console.error("Firebase save failed:", e);
         }
