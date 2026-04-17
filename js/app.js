@@ -2,14 +2,9 @@ const dict = {
     en: {
         title: "Raj & Brinda Sagai",
         tabGuests: "Guest List",
-        tabExpenses: "Expenses",
-        invitesTotal: "Invites / Total",
+        invitesTotal: "Confirmed / Total",
         addBtn: "Add",
         addGuestBtn: "Add Guest",
-        totalExpenses: "Total Spent",
-        expenseName: "Expense name...",
-        amount: "Amount (₹)",
-        addExpenseBtn: "Add Expense",
         editGuest: "Edit Guest",
         guestModalTitle: "Guest Details",
         guestNameLabel: "Name",
@@ -17,23 +12,14 @@ const dict = {
         phoneLabel: "Phone Number",
         cancel: "Cancel",
         saveBtn: "Save",
-        manageCategories: "Manage Categories",
-        newCatName: "New category...",
-        doneBtn: "Done",
-        emptyGuests: "No guests added yet. Add someone above!",
-        emptyExpenses: "No expenses in this category."
+        emptyGuests: "No guests added yet. Add someone above!"
     },
     gu: {
         title: "રાજ અને વૃંદા સગાઈ",
         tabGuests: "મહેમાન યાદી",
-        tabExpenses: "ખર્ચ",
-        invitesTotal: "કાર્ડ / કુલ",
+        invitesTotal: "કન્ફર્મ / કુલ",
         addBtn: "ઉમેરો",
         addGuestBtn: "મહેમાન ઉમેરો",
-        totalExpenses: "કુલ ખર્ચ",
-        expenseName: "ખર્ચની વિગત...",
-        amount: "રકમ (₹)",
-        addExpenseBtn: "ખર્ચ ઉમેરો",
         editGuest: "માહિતી બદલો",
         guestModalTitle: "મહેમાન વિગતો",
         guestNameLabel: "નામ",
@@ -41,11 +27,7 @@ const dict = {
         phoneLabel: "ફોન નંબર",
         cancel: "રદ કરો",
         saveBtn: "સાચવો",
-        manageCategories: "વર્ગો મેનેજ કરો",
-        newCatName: "નવો વર્ગ...",
-        doneBtn: "પૂર્ણ",
-        emptyGuests: "કોઈ મહેમાનો નથી. ઉપરથી ઉમેરો!",
-        emptyExpenses: "કોઈ ખર્ચ નથી."
+        emptyGuests: "કોઈ મહેમાનો નથી. ઉપરથી ઉમેરો!"
     }
 };
 
@@ -78,20 +60,16 @@ const PLANNER_DOC_ID = "document-raj-brinda";
 let state = {
     lang: 'en',
     theme: 'light',
-    guests: [],
-    expenses: [],
-    categories: ['Decorations', 'Catering', 'Location', 'Clothing', 'Miscellaneous']
+    guests: []
 };
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     loadLocalSettings();
     initTheme();
-    initTabs();
     initLanguage();
     initModals();
     initGuests();
-    initExpenses();
     renderAll(); // Initial optimistic render
     loadSharedData(); // Followed by Firestore sync
 });
@@ -131,8 +109,6 @@ function loadSharedData() {
                     const data = docSnap.data();
                     let updated = false;
                     if(data.guests) { state.guests = data.guests; updated = true; }
-                    if(data.expenses) { state.expenses = data.expenses; updated = true; }
-                    if(data.categories) { state.categories = data.categories; updated = true; }
                     if(updated) {
                         localStorage.setItem('sagaiState', JSON.stringify(state));
                         renderAll();
@@ -155,8 +131,6 @@ function loadLegacyFallback() {
     if (saved) {
         const parsed = JSON.parse(saved);
         if(parsed.guests) state.guests = parsed.guests;
-        if(parsed.expenses) state.expenses = parsed.expenses;
-        if(parsed.categories) state.categories = parsed.categories;
         renderAll();
     }
 }
@@ -168,9 +142,7 @@ function saveSharedData() {
         try {
             const docRef = doc(db, "planners", PLANNER_DOC_ID);
             setDoc(docRef, {
-                guests: state.guests,
-                expenses: state.expenses,
-                categories: state.categories
+                guests: state.guests
             }, { merge: true }).catch(err => {
                 console.error("Error saving to Firestore:", err);
                 if (!fsErrorAlerted) {
@@ -192,7 +164,6 @@ function saveState() {
 
 function renderAll() {
     renderGuests();
-    renderExpenses();
     updateTranslations();
 }
 
@@ -247,32 +218,7 @@ function updateTranslations() {
     });
 }
 
-// --- TABS ---
-function initTabs() {
-    const buttons = document.querySelectorAll('.tab-btn');
-    const contents = document.querySelectorAll('.tab-content');
-    const indicator = document.querySelector('.tab-indicator');
 
-    buttons.forEach((btn, index) => {
-        btn.addEventListener('click', () => {
-            // Update active btn
-            buttons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // Move indicator (50% width per tab)
-            indicator.style.transform = `translateX(${index * 100}%)`;
-
-            // Update active content
-            const tabId = btn.getAttribute('data-tab');
-            contents.forEach(c => {
-                c.classList.remove('active');
-                if (c.id === `sec-${tabId}`) {
-                    c.classList.add('active');
-                }
-            });
-        });
-    });
-}
 
 // --- MODALS ---
 function initModals() {
@@ -399,8 +345,8 @@ function renderGuests() {
     
     // Total calculation
     const totalCount = state.guests.reduce((sum, g) => sum + g.headcount, 0);
-    const totalInvites = state.guests.length;
-    document.getElementById('total-guests-count').textContent = `${totalInvites} / ${totalCount}`;
+    const confirmedCount = state.guests.filter(g => g.called).reduce((sum, g) => sum + g.headcount, 0);
+    document.getElementById('total-guests-count').textContent = `${confirmedCount} / ${totalCount}`;
 
     if (state.guests.length === 0) {
         container.innerHTML = `
@@ -436,136 +382,4 @@ function renderGuests() {
 }
 
 
-// --- EXPENSES ---
-function initExpenses() {
-    document.getElementById('btn-add-expense').addEventListener('click', () => {
-        const nameInput = document.getElementById('new-exp-name');
-        const amountInput = document.getElementById('new-exp-amount');
-        const catSelect = document.getElementById('new-exp-category');
-        
-        const name = nameInput.value.trim();
-        const amount = parseFloat(amountInput.value);
-        
-        if (name && !isNaN(amount)) {
-            state.expenses.push({
-                id: Date.now().toString(),
-                name: name,
-                amount: amount,
-                category: catSelect.value || state.categories[0]
-            });
-            nameInput.value = '';
-            amountInput.value = '';
-            saveState();
-        }
-    });
 
-    document.getElementById('btn-manage-cat').addEventListener('click', () => {
-        renderCatEditList();
-        showModal('modal-manage-cat');
-    });
-
-    document.getElementById('btn-add-cat').addEventListener('click', () => {
-        const input = document.getElementById('new-category-input');
-        const val = input.value.trim();
-        if (val && !state.categories.includes(val)) {
-            state.categories.push(val);
-            input.value = '';
-            saveState();
-            renderCatEditList();
-        }
-    });
-}
-
-window.deleteExpense = function(id) {
-    if(confirm('Delete this expense?')) {
-        state.expenses = state.expenses.filter(e => e.id !== id);
-        saveState();
-    }
-}
-
-window.deleteCategory = function(cat) {
-    if(confirm(`Delete category '${cat}'? (Expenses will not be deleted but may be uncategorized)`)) {
-        state.categories = state.categories.filter(c => c !== cat);
-        saveState();
-        renderCatEditList();
-    }
-}
-
-function renderCatEditList() {
-    const list = document.getElementById('cat-edit-list');
-    list.innerHTML = state.categories.map(c => `
-        <li class="cat-edit-item">
-            <span>${c}</span>
-            <button class="btn-icon danger-text" onclick="deleteCategory('${c}')"><span class="material-symbols-rounded">delete</span></button>
-        </li>
-    `).join('');
-}
-
-function renderExpenses() {
-    // Populate select
-    const select = document.getElementById('new-exp-category');
-    // Save current selection to restore if possible
-    const currentVal = select.value;
-    select.innerHTML = state.categories.map(c => `<option value="${c}">${c}</option>`).join('');
-    if(state.categories.includes(currentVal)) {
-        select.value = currentVal;
-    }
-
-    // Calc total
-    const total = state.expenses.reduce((sum, e) => sum + e.amount, 0);
-    document.getElementById('total-expenses-amount').innerHTML = `&#8377;${total.toLocaleString('en-IN')}`;
-
-    // Group expenses
-    const listContainer = document.getElementById('expense-categories-list');
-    
-    if (state.expenses.length === 0) {
-        listContainer.innerHTML = `
-            <div class="empty-state">
-                <div class="material-symbols-rounded">receipt_long</div>
-                <p data-lang-key="emptyExpenses">${dict[state.lang].emptyExpenses}</p>
-            </div>
-        `;
-        return;
-    }
-
-    let html = '';
-
-    // Create groups for valid categories + handle unknown categories gracefully
-    const catSet = new Set(state.categories);
-    state.expenses.forEach(e => {
-        if(!catSet.has(e.category)) catSet.add(e.category);
-    });
-
-    catSet.forEach(cat => {
-        const groupExps = state.expenses.filter(e => e.category === cat);
-        if (groupExps.length === 0) return; // Completely hide empty categories
-
-        const groupTotal = groupExps.reduce((sum, e) => sum + e.amount, 0);
-        
-        let expsHtml = groupExps.map(e => `
-            <div class="list-item">
-                <div class="item-details">
-                    <div class="item-name">${e.name}</div>
-                </div>
-                <div class="expense-amount">&#8377;${e.amount.toLocaleString('en-IN')}</div>
-                <div class="item-actions">
-                    <button class="btn-icon danger-text" onclick="deleteExpense('${e.id}')"><span class="material-symbols-rounded">delete</span></button>
-                </div>
-            </div>
-        `).join('');
-
-        html += `
-            <div class="category-group">
-                <div class="category-header">
-                    <h3 class="category-title">${cat}</h3>
-                    <div class="category-total">&#8377;${groupTotal.toLocaleString('en-IN')}</div>
-                </div>
-                <div class="list-container">
-                    ${expsHtml}
-                </div>
-            </div>
-        `;
-    });
-
-    listContainer.innerHTML = html;
-}

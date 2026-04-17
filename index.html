@@ -36,17 +36,7 @@
                 <h1 id="main-title" data-lang-key="title" style="font-size: 20px;">Raj & Brinda Sagai</h1>
             </div>
 
-            <nav class="tabs">
-                <button class="tab-btn active" data-tab="guests">
-                    <span class="material-symbols-rounded">groups</span>
-                    <span data-lang-key="tabGuests">Guest List</span>
-                </button>
-                <button class="tab-btn" data-tab="expenses">
-                    <span class="material-symbols-rounded">account_balance_wallet</span>
-                    <span data-lang-key="tabExpenses">Expenses</span>
-                </button>
-                <div class="tab-indicator"></div>
-            </nav>
+
         </header>
 
         <main class="app-main">
@@ -57,7 +47,7 @@
                         <span class="material-symbols-rounded">people_outline</span>
                         <div class="summary-text">
                             <span class="summary-value" id="total-guests-count">0 / 0</span>
-                            <span class="summary-label" data-lang-key="invitesTotal">Invites / Total</span>
+                            <span class="summary-label" data-lang-key="invitesTotal">Confirmed / Total</span>
                         </div>
                     </div>
                 </div>
@@ -74,41 +64,7 @@
                 </div>
             </section>
 
-            <!-- EXPENSES SECTION -->
-            <section id="sec-expenses" class="tab-content">
-                <div class="summary-card glass-panel">
-                    <div class="summary-item">
-                        <span class="material-symbols-rounded">receipt_long</span>
-                        <div class="summary-text">
-                            <span class="summary-value" id="total-expenses-amount">₹0</span>
-                            <span class="summary-label" data-lang-key="totalExpenses">Total Spent</span>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="add-bar expand-bar glass-panel">
-                    <div class="input-group">
-                        <input type="text" id="new-exp-name" data-lang-ph="expenseName" placeholder="Expense name...">
-                        <input type="number" id="new-exp-amount" data-lang-ph="amount" placeholder="Amount (₹)">
-                    </div>
-                    <div class="input-group">
-                        <select id="new-exp-category">
-                            <!-- Categories dynamically populated -->
-                        </select>
-                        <button class="btn-icon" id="btn-manage-cat" title="Manage Categories">
-                            <span class="material-symbols-rounded">settings</span>
-                        </button>
-                    </div>
-                    <button class="btn-primary flex-center" id="btn-add-expense">
-                        <span class="material-symbols-rounded">add_circle</span>
-                        <span data-lang-key="addExpenseBtn">Add Expense</span>
-                    </button>
-                </div>
-
-                <div class="categories-list" id="expense-categories-list">
-                    <!-- Dynamic categories and their expenses injected here -->
-                </div>
-            </section>
         </main>
     </div>
 
@@ -147,27 +103,7 @@
         </div>
     </div>
 
-    <!-- Manage Categories Modal -->
-    <div id="modal-manage-cat" class="modal-backdrop">
-        <div class="modal-content glass-panel">
-            <div class="modal-header">
-                <h3 data-lang-key="manageCategories">Manage Categories</h3>
-                <button class="btn-icon close-modal"><span class="material-symbols-rounded">close</span></button>
-            </div>
-            <div class="modal-body">
-                <div class="add-cat-bar">
-                    <input type="text" id="new-category-input" data-lang-ph="newCatName" placeholder="New category...">
-                    <button class="btn-secondary" id="btn-add-cat" data-lang-key="addBtn">Add</button>
-                </div>
-                <ul class="cat-edit-list" id="cat-edit-list">
-                    <!-- Categories edit list -->
-                </ul>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-primary close-modal" data-lang-key="doneBtn">Done</button>
-            </div>
-        </div>
-    </div>
+
 
     <script type="module" src="js/app.js"></script>
 </body>
