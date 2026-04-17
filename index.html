@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raj & Brinda Sagai Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="header-top" style="justify-content: space-between;">
+                <button class="btn-icon" id="theme-toggle" title="Toggle Theme">
+                    <span class="material-symbols-rounded">dark_mode</span>
+                </button>
+                <div class="lang-toggle-container">
+                    <span class="lang-label" id="lang-en" data-lang="en">EN</span>
+                    <label class="switch">
+                        <input type="checkbox" id="lang-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="lang-label" id="lang-gu" data-lang="gu">GU</span>
+                </div>
+            </div>
+            
+            <div class="title-container" style="padding-top: 5px;">
+                <h1 id="main-title" data-lang-key="title" style="font-size: 20px;">Raj & Brinda Sagai</h1>
+            </div>
+
+            <nav class="tabs">
+                <button class="tab-btn active" data-tab="guests">
+                    <span class="material-symbols-rounded">groups</span>
+                    <span data-lang-key="tabGuests">Guest List</span>
+                </button>
+                <button class="tab-btn" data-tab="expenses">
+                    <span class="material-symbols-rounded">account_balance_wallet</span>
+                    <span data-lang-key="tabExpenses">Expenses</span>
+                </button>
+                <div class="tab-indicator"></div>
+            </nav>
+        </header>
+
+        <main class="app-main">
+            <!-- GUEST LIST SECTION -->
+            <section id="sec-guests" class="tab-content active">
+                <div class="summary-card glass-panel">
+                    <div class="summary-item">
+                        <span class="material-symbols-rounded">people_outline</span>
+                        <div class="summary-text">
+                            <span class="summary-value" id="total-guests-count">0 / 0</span>
+                            <span class="summary-label" data-lang-key="invitesTotal">Invites / Total</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="add-bar glass-panel flex-center" style="justify-content: center;">
+                    <button class="btn-primary" id="btn-open-add-guest">
+                        <span class="material-symbols-rounded">person_add</span>
+                        <span data-lang-key="addGuestBtn">Add Guest</span>
+                    </button>
+                </div>
+
+                <div class="list-container" id="guest-list">
+                    <!-- Guest items will be dynamically injected here -->
+                </div>
+            </section>
+
+            <!-- EXPENSES SECTION -->
+            <section id="sec-expenses" class="tab-content">
+                <div class="summary-card glass-panel">
+                    <div class="summary-item">
+                        <span class="material-symbols-rounded">receipt_long</span>
+                        <div class="summary-text">
+                            <span class="summary-value" id="total-expenses-amount">₹0</span>
+                            <span class="summary-label" data-lang-key="totalExpenses">Total Spent</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="add-bar expand-bar glass-panel">
+                    <div class="input-group">
+                        <input type="text" id="new-exp-name" data-lang-ph="expenseName" placeholder="Expense name...">
+                        <input type="number" id="new-exp-amount" data-lang-ph="amount" placeholder="Amount (₹)">
+                    </div>
+                    <div class="input-group">
+                        <select id="new-exp-category">
+                            <!-- Categories dynamically populated -->
+                        </select>
+                        <button class="btn-icon" id="btn-manage-cat" title="Manage Categories">
+                            <span class="material-symbols-rounded">settings</span>
+                        </button>
+                    </div>
+                    <button class="btn-primary flex-center" id="btn-add-expense">
+                        <span class="material-symbols-rounded">add_circle</span>
+                        <span data-lang-key="addExpenseBtn">Add Expense</span>
+                    </button>
+                </div>
+
+                <div class="categories-list" id="expense-categories-list">
+                    <!-- Dynamic categories and their expenses injected here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Edit Guest Modal -->
+    <div id="modal-edit-guest" class="modal-backdrop">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3 id="modal-guest-title" data-lang-key="guestModalTitle">Guest Details</h3>
+                <button class="btn-icon close-modal"><span class="material-symbols-rounded">close</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-g-id">
+                <div class="form-group">
+                    <label data-lang-key="guestNameLabel">Name</label>
+                    <input type="text" id="edit-g-name">
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="headCountLabel">Head Count</label>
+                    <input type="number" id="edit-g-headcount" min="1">
+                </div>
+                <div class="form-group">
+                    <label data-lang-key="phoneLabel">Phone Number</label>
+                    <input type="tel" id="edit-g-phone">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-text close-modal" data-lang-key="cancel">Cancel</button>
+                <button class="btn-primary" id="btn-save-guest" data-lang-key="saveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Categories Modal -->
+    <div id="modal-manage-cat" class="modal-backdrop">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3 data-lang-key="manageCategories">Manage Categories</h3>
+                <button class="btn-icon close-modal"><span class="material-symbols-rounded">close</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="add-cat-bar">
+                    <input type="text" id="new-category-input" data-lang-ph="newCatName" placeholder="New category...">
+                    <button class="btn-secondary" id="btn-add-cat" data-lang-key="addBtn">Add</button>
+                </div>
+                <ul class="cat-edit-list" id="cat-edit-list">
+                    <!-- Categories edit list -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary close-modal" data-lang-key="doneBtn">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
