@@ -246,7 +246,7 @@ function initGuests() {
         // Clear modal for new guest
         document.getElementById('edit-g-id').value = '';
         document.getElementById('edit-g-name').value = '';
-        document.getElementById('edit-g-headcount').value = 1;
+        document.getElementById('edit-g-headcount').value = 2;
         document.getElementById('edit-g-phone').value = '';
         showModal('modal-edit-guest');
     });
@@ -254,7 +254,7 @@ function initGuests() {
     saveBtn.addEventListener('click', () => {
         const id = document.getElementById('edit-g-id').value;
         const nameVal = document.getElementById('edit-g-name').value.trim();
-        const headCountVal = parseInt(document.getElementById('edit-g-headcount').value) || 1;
+        const headCountVal = parseInt(document.getElementById('edit-g-headcount').value) || 2;
         const phoneVal = document.getElementById('edit-g-phone').value.trim();
 
         if (!nameVal) {
