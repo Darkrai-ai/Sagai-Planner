@@ -49,6 +49,31 @@ const dict = {
     }
 };
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-analytics.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDsFOW5llxg2S1Z9xj2UCaPPrW-ER9W5l0",
+  authDomain: "sagai-planner.firebaseapp.com",
+  projectId: "sagai-planner",
+  storageBucket: "sagai-planner.firebasestorage.app",
+  messagingSenderId: "49081190324",
+  appId: "1:49081190324:web:1bbf0e3b75f4461c7514e1",
+  measurementId: "G-QWZ49YEYCW"
+};
+
+let app, db, analytics;
+try {
+    app = initializeApp(firebaseConfig);
+    analytics = getAnalytics(app);
+    db = getFirestore(app);
+} catch (e) {
+    console.warn("Firebase initialization failed (check config). Falling back to local storage.", e);
+}
+
+const PLANNER_DOC_ID = "document-raj-brinda";
+
 // Global State
 let state = {
     lang: 'en',
@@ -60,28 +85,97 @@ let state = {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    loadState();
+    loadLocalSettings();
     initTheme();
     initTabs();
     initLanguage();
     initModals();
     initGuests();
     initExpenses();
-    renderAll();
+    renderAll(); // Initial optimistic render
+    loadSharedData(); // Followed by Firestore sync
 });
 
-function loadState() {
-    const saved = localStorage.getItem('sagaiState');
-    if (saved) {
-        state = JSON.parse(saved);
-        // Fallback for older saves
-        if(!state.categories) state.categories = ['Decorations', 'Catering', 'Location', 'Clothing', 'Miscellaneous'];
-        if(!state.theme) state.theme = 'light';
+function loadLocalSettings() {
+    const savedLocal = localStorage.getItem('sagaiLocalSettings');
+    if (savedLocal) {
+        const parsed = JSON.parse(savedLocal);
+        if (parsed.theme) state.theme = parsed.theme;
+        if (parsed.lang) state.lang = parsed.lang;
+    } else {
+        // Fallback map migrating legacy settings
+        const oldSaved = localStorage.getItem('sagaiState');
+        if (oldSaved) {
+            const parsed = JSON.parse(oldSaved);
+            if (parsed.theme) state.theme = parsed.theme;
+            if (parsed.lang) state.lang = parsed.lang;
+        }
     }
 }
 
+function saveLocalSettings() {
+    localStorage.setItem('sagaiLocalSettings', JSON.stringify({
+        theme: state.theme,
+        lang: state.lang
+    }));
+}
+
+function loadSharedData() {
+    if (db) {
+        try {
+            const docRef = doc(db, "planners", PLANNER_DOC_ID);
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    state.guests = data.guests || [];
+                    state.expenses = data.expenses || [];
+                    state.categories = data.categories || ['Decorations', 'Catering', 'Location', 'Clothing', 'Miscellaneous'];
+                    renderAll();
+                } else {
+                    saveSharedData();
+                }
+            }, (error) => {
+                console.error("Firestore sync error:", error);
+                loadLegacyFallback();
+            });
+        } catch(e) {
+            console.error("Firestore listener error:", e);
+            loadLegacyFallback();
+        }
+    } else {
+        loadLegacyFallback();
+    }
+}
+
+function loadLegacyFallback() {
+    const saved = localStorage.getItem('sagaiState');
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        if(parsed.guests) state.guests = parsed.guests;
+        if(parsed.expenses) state.expenses = parsed.expenses;
+        if(parsed.categories) state.categories = parsed.categories;
+        renderAll();
+    }
+}
+
+function saveSharedData() {
+    if (db) {
+        try {
+            const docRef = doc(db, "planners", PLANNER_DOC_ID);
+            setDoc(docRef, {
+                guests: state.guests,
+                expenses: state.expenses,
+                categories: state.categories
+            }, { merge: true }).catch(err => console.error("Error saving to Firestore:", err));
+        } catch (e) {
+            console.error("Firebase save failed:", e);
+        }
+    }
+    localStorage.setItem('sagaiState', JSON.stringify(state)); // Legacy fallback
+}
+
 function saveState() {
-    localStorage.setItem('sagaiState', JSON.stringify(state));
+    saveSharedData();
     renderAll();
 }
 
@@ -99,7 +193,7 @@ function initTheme() {
     btn.addEventListener('click', () => {
         state.theme = state.theme === 'light' ? 'dark' : 'light';
         document.body.classList.toggle('dark-theme', state.theme === 'dark');
-        saveState();
+        saveLocalSettings();
     });
 }
 
@@ -112,7 +206,8 @@ function initLanguage() {
     toggle.addEventListener('change', (e) => {
         state.lang = e.target.checked ? 'gu' : 'en';
         updateLangLabels();
-        saveState(); // also triggers render
+        saveLocalSettings();
+        renderAll();
     });
 }
 
